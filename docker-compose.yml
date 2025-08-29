@@ -1,0 +1,45 @@
+services:
+  holesail-server:
+    build: .
+    container_name: holesail-server
+    restart: unless-stopped
+    ports:
+      # Map a range of ports for Holesail to use
+      - "8000-8100:8000-8100"
+    volumes:
+      # Mount a volume for persistent data
+      - holesail_data:/usr/src/app/data
+      - ./config:/usr/src/app/config:ro
+    environment:
+      - NODE_ENV=production
+      - HOLESAIL_LOG_LEVEL=info
+    networks:
+      - holesail-network
+    command: ["node", "bin/holesail.mjs", "--live", "8090"]
+    
+  holesail-client:
+    build: .
+    container_name: holesail-client
+    restart: unless-stopped
+    ports:
+      - "9000-9100:9000-9100"
+    volumes:
+      - holesail_client_data:/usr/src/app/data
+    environment:
+      - NODE_ENV=production
+      - HOLESAIL_LOG_LEVEL=info
+    networks:
+      - holesail-network
+    profiles:
+      - client
+    depends_on:
+      - holesail-server
+    command: ["node", "bin/holesail.mjs", "--connect", "CONNECTION_STRING", "--port", "9090"]
+
+networks:
+  holesail-network:
+    driver: bridge
+
+volumes:
+  holesail_data:
+  holesail_client_data:

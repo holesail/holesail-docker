@@ -1,0 +1,92 @@
+{
+  "name": "holesail",
+  "version": "2.3.2",
+  "description": "Holesail is TCP/UDP peer-to-peer proxy. Holesail let's you instantly share any application running on a specific port from your local computer.",
+  "main": "index.js",
+  "pear": {
+    "name": "holesail",
+    "type": "terminal",
+    "stage": {
+      "ignore": [
+        ".github",
+        ".gitignore",
+        ".idea",
+        ".vscode"
+      ]
+    }
+  },
+  "imports": {
+    "util": {
+      "bare": "bare-utils",
+      "default": "util"
+    },
+    "fs": {
+      "bare": "bare-fs",
+      "default": "fs"
+    },
+    "process": {
+      "bare": "bare-process",
+      "default": "process"
+    },
+    "crypto": {
+      "bare": "bare-crypto",
+      "default": "crypto"
+    }
+  },
+  "scripts": {
+    "test": "standard && node test.mjs",
+    "refresh": "rm package-lock.json && rm -rf node_modules && npm i && npm update"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holesail/holesail.git"
+  },
+  "keywords": [
+    "holesail",
+    "hyperdht",
+    "holepunch"
+  ],
+  "author": "supersuryaansh",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/holesail/holesail/issues"
+  },
+  "homepage": "https://github.com/holesail/holesail#readme",
+  "pkg": {
+    "assets": [
+      "includes/**/*"
+    ]
+  },
+  "dependencies": {
+    "bare-crypto": "^1.4.3",
+    "bare-module": "^4.8.3",
+    "bare-path": "^3.0.0",
+    "bare-process": "^4.2.1",
+    "bare-querystring": "^1.0.0",
+    "barely-colours": "^1.0.0",
+    "child_process": "npm:bare-subprocess@^5.0.3",
+    "cli-box": "6.0.10",
+    "colors": "^1.4.0",
+    "graceful-goodbye": "^1.3.3",
+    "holesail-client": "^2.2.0",
+    "holesail-logger": "^1.1.0",
+    "holesail-server": "^2.3.1",
+    "hyper-cmd-lib-keys": "^0.1.1",
+    "livefiles": "^1.1.0",
+    "minimist": "^1.2.8",
+    "module": "npm:bare-node-module@^1.0.0",
+    "path": "npm:bare-node-path@^1.0.1",
+    "process": "npm:bare-process@^4.2.1",
+    "qrcode-terminal": "^0.12.0",
+    "querystring": "npm:bare-node-querystring@^1.0.0",
+    "ready-resource": "^1.1.2",
+    "which-runtime": "^1.2.1",
+    "z32": "^1.1.0"
+  },
+  "bin": {
+    "holesail": "./bin/holesail.mjs"
+  },
+  "devDependencies": {
+    "standard": "^17.1.2"
+  }
+}
