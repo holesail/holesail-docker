@@ -1,5 +1,4 @@
 FROM node:18-slim AS builder
-
 WORKDIR /usr/src/app
 
 # Install git and libsodium-dev
@@ -16,15 +15,12 @@ RUN if command -v apt-get >/dev/null; then \
   echo "No supported package manager found! Install git and libsodium manually." && exit 1; \
   fi
 
-# Clone the specific branch
 RUN git clone --branch class https://github.com/holesail/holesail.git .
 
-# Install dependencies (excluding dev)
+# Install dependencies
 RUN npm install --omit=dev
 
-# Stage 2: Production Stage
 FROM node:18-slim AS production
-
 WORKDIR /usr/src/app
 
 # Copy from the builder stage
@@ -36,6 +32,8 @@ RUN useradd --uid 1001 --create-home holesail && \
 
 USER holesail
 
-EXPOSE 8000-9000
+# Expose single port instead of range
+EXPOSE 8090
 
-CMD ["node", "index.js"]
+# Use correct executable file for v2 branch
+CMD ["node", "bin/holesail.mjs"]

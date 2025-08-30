@@ -1,10 +1,10 @@
 services:
-  holesail-server:
+  holesail:
     build: .
-    container_name: holesail-server
+    container_name: holesail
     restart: unless-stopped
     ports:
-      - "8000-8100:8000-8100"
+      - "8090:8090"
     volumes:
       - holesail_data:/usr/src/app/data
       - ./config:/usr/src/app/config:ro
@@ -13,6 +13,8 @@ services:
       - HOLESAIL_LOG_LEVEL=info
     networks:
       - holesail-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: ["node", "bin/holesail.mjs", "--live", "8090"]
 
   holesail-client:
@@ -20,23 +22,20 @@ services:
     container_name: holesail-client
     restart: unless-stopped
     ports:
-      # Map a range of ports for the client on the host
-      - "9000-9100:9000-9100"
+      - "9090:9090"
     volumes:
       - holesail_client_data:/usr/src/app/data
     environment:
       - NODE_ENV=production
       - HOLESAIL_LOG_LEVEL=info
-      # Use an environment variable for the connection string
-      - HOLESAIL_SERVER_URL=${HOLESAIL_SERVER_URL}
+      - HOLESAIL_SERVER_KEY=${HOLESAIL_SERVER_KEY}
     networks:
       - holesail-network
     profiles:
       - client
     depends_on:
-      - holesail-server
-    # Use the environment variable in the command
-    command: ["node", "bin/holesail.mjs", "--connect", "${HOLESAIL_SERVER_URL}", "--port", "9090"]
+      - holesail
+    command: ["sh", "-c", "node bin/holesail.mjs --connect \"$HOLESAIL_SERVER_KEY\" --port 9090"]
 
 networks:
   holesail-network:
