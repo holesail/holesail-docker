@@ -51,7 +51,7 @@ docker build -t holesail .
 docker run -d \
   --name holesail \
   -p 8090:8090 \
-  -e HOLESAIL_LIVE_PORT=8090 \
+  -e HOLESAIL_SERVICE_PORT=8090 \
   holesail:latest
 # Check logs for key
 docker logs holesail | grep "Connect with key:"
@@ -59,24 +59,24 @@ docker logs holesail | grep "Connect with key:"
 
 ## Environment Variables Configuration
 
-The Docker setup supports flexible configuration through environment variables:
+The Docker setup supports flexible configuration through environment variables with improved naming conventions:
 
 ### Server Mode Variables:
-- `HOLESAIL_LIVE_PORT`: Port to host the service on (default: 8090)
-- `HOLESAIL_HOST`: Host to bind to
-- `HOLESAIL_KEY`: Custom server key
-- `HOLESAIL_SEED`: Seed value for key generation
-- `HOLESAIL_PUBLIC`: Set to "true" for public access
-- `HOLESAIL_DIRECTORY`: Directory to serve files from
+- `HOLESAIL_SERVICE_PORT`: Port to host the service on (default: 8090)
+- `HOLESAIL_BIND_HOST`: Host to bind to
+- `HOLESAIL_SERVER_KEY`: Custom server key
+- `HOLESAIL_KEY_SEED`: Seed value for key generation
+- `HOLESAIL_ENABLE_PUBLIC`: Set to "true" for public access
+- `HOLESAIL_FILE_DIRECTORY`: Directory to serve files from
 
 ### Client Mode Variables:
-- `HOLESAIL_CONNECT_KEY`: Server key to connect to (enables client mode)
-- `HOLESAIL_PORT`: Local port for client connection
+- `HOLESAIL_CLIENT_KEY`: Server key to connect to (enables client mode)
+- `HOLESAIL_CLIENT_PORT`: Local port for client connection
 
 ### General Variables:
 - `NODE_ENV`: Set to "production" for production deployments
-- `HOLESAIL_LOG_LEVEL`: Controls logging verbosity (info, debug, warn, error)
-- `HOLESAIL_BUFFERING`: Set to "false" to disable buffering
+- `HOLESAIL_LOGGING_LEVEL`: Controls logging verbosity (info, debug, warn, error)
+- `HOLESAIL_ENABLE_BUFFERING`: Set to "false" to disable buffering
 - `HOLESAIL_CONNECTOR_PORT`: Custom connector port
 
 ## Connecting to Holesail Server
@@ -122,9 +122,9 @@ To expose a local web server (e.g., running on localhost:3000), use environment 
 holesail:
   # ... other configuration
   environment:
-    - HOLESAIL_LIVE_PORT=8090
-    - HOLESAIL_HOST=host.docker.internal
-    - HOLESAIL_DIRECTORY=/path/to/serve
+    - HOLESAIL_SERVICE_PORT=8090
+    - HOLESAIL_BIND_HOST=host.docker.internal
+    - HOLESAIL_FILE_DIRECTORY=/path/to/serve
   extra_hosts:
     - "host.docker.internal:host-gateway"
 ```
@@ -146,7 +146,6 @@ docker compose down
 docker compose down -v
 
 # View server logs (clean output)
-docker logs holesail
 docker compose logs --no-log-prefix holesail
 
 # View client logs (if running)
@@ -227,16 +226,16 @@ The `run.sh` script automatically converts environment variables to command-line
 ### Server Examples:
 ```yaml
 environment:
-  - HOLESAIL_LIVE_PORT=8090
-  - HOLESAIL_HOST=localhost
-  - HOLESAIL_PUBLIC=true
+  - HOLESAIL_SERVICE_PORT=8090
+  - HOLESAIL_BIND_HOST=localhost
+  - HOLESAIL_ENABLE_PUBLIC=true
 ```
 
 ### Client Examples:
 ```yaml
 environment:
-  - HOLESAIL_CONNECT_KEY=hs://s000your-key-here
-  - HOLESAIL_PORT=9090
+  - HOLESAIL_CLIENT_KEY=hs://s000your-key-here
+  - HOLESAIL_CLIENT_PORT=9090
 ```
 
 ## URI Format
