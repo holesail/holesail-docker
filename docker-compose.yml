@@ -11,11 +11,17 @@ services:
     environment:
       - NODE_ENV=production
       - HOLESAIL_LOG_LEVEL=info
+      - HOLESAIL_LIVE_PORT=8090
+      # Optional environment variables:
+      # - HOLESAIL_HOST=localhost
+      # - HOLESAIL_KEY=your_custom_key
+      # - HOLESAIL_SEED=your_seed
+      # - HOLESAIL_PUBLIC=true
+      # - HOLESAIL_DEBUG=true
     networks:
       - holesail-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: ["node", "bin/holesail.mjs", "--live", "8090"]
 
   holesail-client:
     build: .
@@ -28,14 +34,16 @@ services:
     environment:
       - NODE_ENV=production
       - HOLESAIL_LOG_LEVEL=info
-      - HOLESAIL_SERVER_KEY=${HOLESAIL_SERVER_KEY}
+      - HOLESAIL_CONNECT_KEY=${HOLESAIL_SERVER_KEY}
+      - HOLESAIL_PORT=9090
+      # Optional:
+      # - HOLESAIL_DEBUG=true
     networks:
       - holesail-network
     profiles:
       - client
     depends_on:
       - holesail
-    command: ["sh", "-c", "node bin/holesail.mjs --connect \"$HOLESAIL_SERVER_KEY\" --port 9090"]
 
 networks:
   holesail-network:

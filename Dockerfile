@@ -26,6 +26,12 @@ WORKDIR /usr/src/app
 # Copy from the builder stage
 COPY --from=builder /usr/src/app .
 
+# Copy the run script
+COPY run.sh /usr/src/app/run.sh
+
+# Make run script executable
+RUN chmod +x /usr/src/app/run.sh
+
 # Create non-root user
 RUN useradd --uid 1001 --create-home holesail && \
   chown -R holesail:holesail /usr/src/app
@@ -35,5 +41,5 @@ USER holesail
 # Expose single port instead of range
 EXPOSE 8090
 
-# Use correct executable file for v2 branch
-CMD ["node", "bin/holesail.mjs"]
+# Use the run script as entrypoint
+ENTRYPOINT ["/usr/src/app/run.sh"]
