@@ -3,48 +3,82 @@
 # Build command arguments from environment variables
 ARGS=()
 
-# Handle different modes based on environment variables
-if [ -n "$HOLESAIL_CLIENT_KEY" ]; then
-    # Client mode
-    ARGS+=("--connect" "$HOLESAIL_CLIENT_KEY")
-    if [ -n "$HOLESAIL_CLIENT_PORT" ]; then
-        ARGS+=("--port" "$HOLESAIL_CLIENT_PORT")
-    fi
-elif [ -n "$HOLESAIL_SERVICE_PORT" ]; then
-    # Server mode
-    ARGS+=("--live" "$HOLESAIL_SERVICE_PORT")
-else
-    # Default server mode
+# Handle different modes based on MODE environment variable
+case "$MODE" in
+"server")
+  # Server mode
+  if [ -n "$PORT" ]; then
+    ARGS+=("--live" "$PORT")
+  else
     ARGS+=("--live" "8090")
-fi
+  fi
+  ;;
+"client")
+  # Client mode
+  if [ -n "$KEY" ]; then
+    ARGS+=("--connect" "$KEY")
+  fi
+  if [ -n "$PORT" ]; then
+    ARGS+=("--port" "$PORT")
+  fi
+  ;;
+"filemanager")
+  # Filemanager mode
+  if [ -n "$DIR" ]; then
+    ARGS+=("--filemanager" "$DIR")
+  fi
+  if [ -n "$PORT" ]; then
+    ARGS+=("--port" "$PORT")
+  fi
+  if [ -n "$USERNAME" ]; then
+    ARGS+=("--username" "$USERNAME")
+  fi
+  if [ -n "$PASSWORD" ]; then
+    ARGS+=("--password" "$PASSWORD")
+  fi
+  if [ -n "$ROLE" ]; then
+    ARGS+=("--role" "$ROLE")
+  fi
+  ;;
+*)
+  # Default server mode if MODE not specified
+  if [ -n "$PORT" ]; then
+    ARGS+=("--live" "$PORT")
+  else
+    ARGS+=("--live" "8090")
+  fi
+  ;;
+esac
 
 # Add optional arguments based on environment variables
-if [ -n "$HOLESAIL_BIND_HOST" ]; then
-    ARGS+=("--host" "$HOLESAIL_BIND_HOST")
+if [ -n "$HOST" ]; then
+  ARGS+=("--host" "$HOST")
 fi
 
-if [ -n "$HOLESAIL_SERVER_KEY" ]; then
-    ARGS+=("--key" "$HOLESAIL_SERVER_KEY")
+if [ -n "$KEY" ] && [ "$MODE" != "client" ]; then
+  ARGS+=("--key" "$KEY")
 fi
 
-if [ -n "$HOLESAIL_KEY_SEED" ]; then
-    ARGS+=("--seed" "$HOLESAIL_KEY_SEED")
+if [ -n "$HOLESAIL_KEY" ]; then
+  ARGS+=("--key" "$HOLESAIL_KEY")
 fi
 
-if [ "$HOLESAIL_ENABLE_PUBLIC" = "true" ]; then
-    ARGS+=("--public")
+if [ "$PUBLIC" = "true" ]; then
+  ARGS+=("--public")
 fi
 
-if [ "$HOLESAIL_ENABLE_BUFFERING" = "false" ]; then
-    ARGS+=("--no-buffering")
+if [ "$FORCE" = "true" ]; then
+  ARGS+=("--force")
 fi
 
-if [ -n "$HOLESAIL_CONNECTOR_PORT" ]; then
-    ARGS+=("--connector-port" "$HOLESAIL_CONNECTOR_PORT")
+if [ "$LOG" = "true" ] || [ "$LOG" = "1" ]; then
+  ARGS+=("--log")
+elif [ -n "$LOG" ] && [ "$LOG" != "false" ] && [ "$LOG" != "0" ]; then
+  ARGS+=("--log" "$LOG")
 fi
 
-if [ -n "$HOLESAIL_FILE_DIRECTORY" ]; then
-    ARGS+=("--directory" "$HOLESAIL_FILE_DIRECTORY")
+if [ -n "$CONNECTOR_PORT" ]; then
+  ARGS+=("--connector-port" "$CONNECTOR_PORT")
 fi
 
 # Debug output

@@ -21,14 +21,16 @@ Holesail lets you share any locally running application on a specific port with 
 
 ### Using Docker Compose (Recommended)
 
-This Docker setup uses environment variables for configuration with a `run.sh` script that automatically converts them to command-line arguments.
+This Docker setup uses environment variables with explicit `MODE` configuration for clear server/client/filemanager operation.
 
 **For Docker Compose V2 (Current):**
 ```bash
 # Start the server
 docker compose up holesail -d
+
 # Get the key from logs (clean output)
 docker compose logs --no-log-prefix holesail | grep "Connect with key:"
+
 # View logs without service prefix
 docker compose logs --no-log-prefix -f holesail
 ```
@@ -37,67 +39,102 @@ docker compose logs --no-log-prefix -f holesail
 ```bash
 # Start the server
 docker-compose up holesail -d
+
 # Get the key from logs
 docker logs holesail | grep "Connect with key:"
+
 # View logs
 docker-compose logs -f holesail
 ```
 
 ### Manual Docker Commands
+
+**Server Mode:**
 ```bash
-# Build the image
-docker build -t holesail .
-# Run server with environment variables
-docker run -d \
-  --name holesail \
-  -p 8090:8090 \
-  -e HOLESAIL_SERVICE_PORT=8090 \
+docker run -d --name holesail \
+  -e MODE=server \
+  -e PORT=25565 \
+  -e HOST=127.0.0.1 \
+  -e KEY=very-super-secret \
+  -e PUBLIC=false \
+  --network host \
   holesail:latest
-# Check logs for key
-docker logs holesail | grep "Connect with key:"
+```
+
+**Client Mode:**
+```bash
+docker run -d --name holesail-client \
+  -e MODE=client \
+  -e PORT=25565 \
+  -e HOST=127.0.0.1 \
+  -e KEY=very-super-secret \
+  -e FORCE=true \
+  -e LOG=true \
+  --network host \
+  holesail:latest
+```
+
+**File Manager Mode:**
+```bash
+docker run -d \
+  --name holesail-filemanager \
+  -p 8080:8080 \
+  -e MODE=filemanager \
+  -e PORT=8080 \
+  -e HOST=127.0.0.1 \
+  -e PUBLIC=true \
+  -e LOG=true \
+  -e KEY=my-filemanager-key \
+  -e FORCE=true \
+  -e DIR=/app/files \
+  -e USERNAME=admin \
+  -e PASSWORD=securepass \
+  -e ROLE=admin \
+  -v /path/to/local/files:/app/files \
+  holesail:latest
 ```
 
 ## Environment Variables Configuration
 
-The Docker setup supports flexible configuration through environment variables with improved naming conventions:
+The Docker setup uses a simple `MODE` variable to determine operation mode, with consistent variable names across all modes:
 
-### Server Mode Variables:
-- `HOLESAIL_SERVICE_PORT`: Port to host the service on (default: 8090)
-- `HOLESAIL_BIND_HOST`: Host to bind to
-- `HOLESAIL_SERVER_KEY`: Custom server key
-- `HOLESAIL_KEY_SEED`: Seed value for key generation
-- `HOLESAIL_ENABLE_PUBLIC`: Set to "true" for public access
-- `HOLESAIL_FILE_DIRECTORY`: Directory to serve files from
+### Core Variables (All Modes):
+- `MODE`: Operation mode (`server`, `client`, or `filemanager`)
+- `PORT`: Port number for the service
+- `HOST`: Host to bind to (default: 127.0.0.1)
+- `KEY`: Connection key (server key for client mode, custom key for server/filemanager)
+- `PUBLIC`: Set to "true" for public access
+- `FORCE`: Set to "true" to force operation
+- `LOG`: Set to "true" or log level for logging
 
-### Client Mode Variables:
-- `HOLESAIL_CLIENT_KEY`: Server key to connect to (enables client mode)
-- `HOLESAIL_CLIENT_PORT`: Local port for client connection
+### Server Mode Specific:
+- `HOLESAIL_KEY`: Alternative way to set custom server key
 
-### General Variables:
+### File Manager Mode Specific:
+- `DIR`: Directory to serve files from
+- `USERNAME`: File manager username
+- `PASSWORD`: File manager password
+- `ROLE`: User role for file manager
+
+### Advanced Variables:
 - `NODE_ENV`: Set to "production" for production deployments
-- `HOLESAIL_LOGGING_LEVEL`: Controls logging verbosity (info, debug, warn, error)
-- `HOLESAIL_ENABLE_BUFFERING`: Set to "false" to disable buffering
-- `HOLESAIL_CONNECTOR_PORT`: Custom connector port
+- `CONNECTOR_PORT`: Custom connector port
 
-## Connecting to Holesail Server
+## Usage Examples
 
-### Option 1: Using External Holesail CLI
-After starting the Docker server, you'll get a key from the logs. Use this to connect:
+### Starting a Server
 ```bash
-# Get the connection key
-docker compose logs --no-log-prefix holesail | grep "hs://"
+# Start server with Docker Compose
+docker compose up holesail -d
 
-# Connect from another machine with Holesail installed
-holesail <key> --port 9090
+# Get connection key
+docker compose logs --no-log-prefix holesail | grep "Connect with key:"
 ```
-Then access the tunneled application at http://localhost:9090
 
-### Option 2: Using Docker Client Service
-Set up environment variable and start the client container:
-
+### Connecting a Client
 ```bash
 # Set the key from server logs
-export HOLESAIL_SERVER_KEY="hs://your-key-here"
+export HOLESAIL_KEY="hs://s000your-key-here"
 
 # Start client service
 docker compose --profile client up holesail-client -d
@@ -106,83 +143,49 @@ docker compose --profile client up holesail-client -d
 docker compose logs --no-log-prefix -f holesail-client
 ```
 
-**Using .env file (Alternative):**
-Create a `.env` file in the same directory as docker-compose.yml:
-```
-HOLESAIL_SERVER_KEY=hs://your-key-here
-```
-Then start the client:
+### Running File Manager
 ```bash
-docker compose --profile client up holesail-client -d
+# Start file manager service
+docker compose --profile filemanager up holesail-filemanager -d
+
+# View file manager logs
+docker compose logs --no-log-prefix -f holesail-filemanager
 ```
 
-## Exposing Local Applications
-To expose a local web server (e.g., running on localhost:3000), use environment variables:
-```yaml
-holesail:
-  # ... other configuration
-  environment:
-    - HOLESAIL_SERVICE_PORT=8090
-    - HOLESAIL_BIND_HOST=host.docker.internal
-    - HOLESAIL_FILE_DIRECTORY=/path/to/serve
-  extra_hosts:
-    - "host.docker.internal:host-gateway"
-```
+## Docker Compose Profiles
 
-## Docker Compose Commands
+The docker-compose.yml supports different profiles for different use cases:
 
-**For Docker Compose V2 (Current):**
+- **Default**: Server only
+- **`client`**: Includes client service
+- **`filemanager`**: Includes file manager service
+
 ```bash
-# Start server only
+# Start server only (default)
 docker compose up holesail -d
 
-# Start both server and client
+# Start server and client
 docker compose --profile client up -d
 
-# Stop all services
-docker compose down
-
-# Stop and remove volumes
-docker compose down -v
-
-# View server logs (clean output)
-docker compose logs --no-log-prefix holesail
-
-# View client logs (if running)
-docker compose logs --no-log-prefix holesail-client
-
-# Get connection key quickly
-docker compose logs --no-log-prefix holesail | grep "hs://"
-
-# Check running containers
-docker ps
+# Start all services including file manager
+docker compose --profile client --profile filemanager up -d
 ```
 
-**For Docker Compose V1 (Legacy):**
-```bash
-# Start server only
-docker-compose up holesail -d
+## Environment File (.env)
 
-# Start both server and client
-docker-compose --profile client up -d
+Create a `.env` file for easier configuration:
+```env
+# Server configuration
+NODE_ENV=production
+MODE=server
+PORT=8090
+HOST=127.0.0.1
+KEY=my-custom-key
+PUBLIC=true
+LOG=true
 
-# Stop all services
-docker-compose down
-
-# Stop and remove volumes
-docker-compose down -v
-
-# View server logs
-docker logs holesail
-
-# View client logs (if running)
-docker logs holesail-client
-
-# Get connection key quickly
-docker logs holesail | grep "hs://"
-
-# Check running containers
-docker ps
+# Client configuration (when using client profile)
+HOLESAIL_KEY=hs://s000your-server-key-here
 ```
 
 ## Log Management
@@ -202,54 +205,23 @@ docker compose logs --no-log-prefix holesail | grep -v "█"
 docker compose logs --no-log-prefix holesail | grep -E "(Started|listening|Connect with key)"
 ```
 
-### Log Configuration:
-The docker-compose.yml includes log rotation to prevent excessive disk usage:
-```yaml
-logging:
-  options:
-    labels: "service=holesail"
-```
-
 ## Project Structure
 ```
 .
 ├── Dockerfile
 ├── docker-compose.yml
 ├── run.sh                 # Environment variable parser script
-└── README.md
+├── README.md
+└── files/                 # Directory for file manager (optional)
 ```
-
-The `run.sh` script automatically converts environment variables to command-line arguments, making the Docker setup much more flexible and maintainable.
-
-## Environment Variables Examples
-
-### Server Examples:
-```yaml
-environment:
-  - HOLESAIL_SERVICE_PORT=8090
-  - HOLESAIL_BIND_HOST=localhost
-  - HOLESAIL_ENABLE_PUBLIC=true
-```
-
-### Client Examples:
-```yaml
-environment:
-  - HOLESAIL_CLIENT_KEY=hs://s000your-key-here
-  - HOLESAIL_CLIENT_PORT=9090
-```
-
-## URI Format
-Holesail uses a simple URI format for sharing server locations:
-- Secure server: hs://s000<key>
-- Insecure server: hs://0000<key>
 
 ## Troubleshooting
 
 ### Common Issues:
-- **Client won't connect**: Ensure `HOLESAIL_SERVER_KEY` is set correctly with the full key from server logs
+- **Client won't connect**: Ensure `KEY` is set correctly with the full key from server logs
 - **Can't access local app**: Make sure `extra_hosts` is configured and environment variables are set properly
 - **Permission errors**: Check that volumes have proper permissions
-- **Verbose logs**: Use `docker compose logs --no-log-prefix holesail` for cleaner output
+- **Mode confusion**: Always set `MODE` explicitly (`server`, `client`, or `filemanager`)
 
 ### Debugging:
 ```bash
@@ -258,15 +230,34 @@ docker ps
 
 # View detailed logs without prefix noise
 docker compose logs --no-log-prefix -f holesail
-docker compose logs --no-log-prefix -f holesail-client
 
-# Check network connectivity
-docker network ls
-docker network inspect holesail-docker_holesail-network
-
-# Debug the run.sh script execution
+# Check the exact command being run
 docker compose logs --no-log-prefix holesail | grep "Starting holesail with"
+
+# Test different modes
+docker run --rm -e MODE=server -e PORT=8080 -e LOG=true holesail:latest
 ```
+
+## Example Output
+
+**Server startup:**
+```
+Starting holesail with: node bin/holesail.mjs --live 25565 --host 127.0.0.1 --force --key very-super-secret --log
+| Connect with key: hs://s000very-super-secret
+| Holesail is now listening on 127.0.0.1:25565
+```
+
+**File manager startup:**
+```
+Starting holesail with: node bin/holesail.mjs --filemanager /app/files --port 8080 --public --force --host 127.0.0.1 --key my-filemanager-key --username admin --password securepass --role admin --log
+| Holesail is now listening on 127.0.0.1:8080
+| Username: admin Password: securepass Role: admin
+```
+
+## URI Format
+Holesail uses a simple URI format for sharing server locations:
+- Secure server: `hs://s000<key>`
+- Insecure server: `hs://0000<key>`
 
 ## Documentation
 Documentation for Holesail can be found at https://docs.holesail.io/
