@@ -1,0 +1,84 @@
+services:
+  holesail:
+    build: .
+    container_name: holesail
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - holesail_data:/usr/src/app/data
+      - ./config:/usr/src/app/config:ro
+    environment:
+      - NODE_ENV=production
+      - MODE=server
+      - PORT=8090
+      - HOST=127.0.0.1
+      # Optional server variables:
+      # - KEY=very-super-secret
+      # - PUBLIC=true
+      # - FORCE=true
+      # - LOG=true
+      # - HOLESAIL_KEY=custom-key-here
+    networks:
+      - holesail-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  holesail-client:
+    build: .
+    container_name: holesail-client
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - holesail_client_data:/usr/src/app/data
+    environment:
+      - NODE_ENV=production
+      - MODE=client
+      - PORT=9090
+      - KEY=${HOLESAIL_KEY}  # Set this to the server key
+      # Optional client variables:
+      # - HOST=127.0.0.1
+      # - LOG=true
+    networks:
+      - holesail-network
+    profiles:
+      - client
+    depends_on:
+      - holesail
+
+  holesail-filemanager:
+    build: .
+    container_name: holesail-filemanager
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - holesail_filemanager_data:/usr/src/app/data
+      - ./files:/app/files  # Mount local files directory
+    environment:
+      - NODE_ENV=production
+      - MODE=filemanager
+      - PORT=8080
+      - HOST=127.0.0.1
+      - DIR=/app/files
+      - USERNAME=admin
+      - PASSWORD=securepass
+      - ROLE=admin
+      - PUBLIC=true
+      - FORCE=true
+      - KEY=my-filemanager-key
+      - LOG=true
+    networks:
+      - holesail-network
+    profiles:
+      - filemanager
+
+networks:
+  holesail-network:
+    driver: bridge
+
+volumes:
+  holesail_data:
+  holesail_client_data:
+  holesail_filemanager_data:
