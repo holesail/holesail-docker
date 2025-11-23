@@ -118,8 +118,7 @@ The Docker setup uses a simple `MODE` variable to determine operation mode, with
 
 ### Advanced Variables:
 - `NODE_ENV`: Set to "production" for production deployments
-- `CONNECTOR_PORT`: Custom connector port
-
+- 
 ## Usage Examples
 
 ### Starting a Server
@@ -242,33 +241,22 @@ docker run --rm -e MODE=server -e PORT=8080 -e LOG=true holesail:latest
 
 **Server startup:**
 ```
-Starting holesail with: node bin/holesail.mjs --live 25565 --host 127.0.0.1 --force --key very-super-secret --log
+Starting holesail with: node src/bin/holesail.mjs --live 25565 --host 127.0.0.1 --force --key very-super-secret --log
 | Connect with key: hs://s000very-super-secret
 | Holesail is now listening on 127.0.0.1:25565
 ```
 
 **File manager startup:**
 ```
-Starting holesail with: node bin/holesail.mjs --filemanager /app/files --port 8080 --public --force --host 127.0.0.1 --key my-filemanager-key --username admin --password securepass --role admin --log
+Starting holesail with: node src/bin/holesail.mjs --filemanager /app/files --port 8080 --public --force --host 127.0.0.1 --key my-filemanager-key --username admin --password securepass --role admin --log
 | Holesail is now listening on 127.0.0.1:8080
 | Username: admin Password: securepass Role: admin
 ```
 
 ## URI Format
-Holesail uses a simple URI format for sharing server locations:
+Holesail uses a simple URI format:
 - Secure server: `hs://s000<key>`
 - Insecure server: `hs://0000<key>`
 
 ## Documentation
 Documentation for Holesail can be found at https://docs.holesail.io/
-
-## License
-Holesail Server is released under the GPL-3.0 License. See the [LICENSE](https://www.gnu.org/licenses/gpl-3.0.en.html) file for more information.
-
-## Contributing
-Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
-
-## Acknowledgments
-Holesail is built on and inspired by the following open-source projects:
-- hypertele: https://github.com/bitfinexcom/hypertele
-- holepunch: https://holepunch.to

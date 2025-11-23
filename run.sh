@@ -77,12 +77,8 @@ elif [ -n "$LOG" ] && [ "$LOG" != "false" ] && [ "$LOG" != "0" ]; then
   ARGS+=("--log" "$LOG")
 fi
 
-if [ -n "$CONNECTOR_PORT" ]; then
-  ARGS+=("--connector-port" "$CONNECTOR_PORT")
-fi
-
 # Debug output
-echo "Starting holesail with: node bin/holesail.mjs ${ARGS[*]}"
+echo "Starting holesail with: node src/bin/holesail.mjs ${ARGS[*]}"
 
 # Execute the holesail command
-exec node bin/holesail.mjs "${ARGS[@]}"
+exec node src/bin/holesail.mjs "${ARGS[@]}"

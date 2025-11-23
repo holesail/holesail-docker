@@ -15,7 +15,7 @@ RUN if command -v apt-get >/dev/null; then \
   echo "No supported package manager found! Install git and libsodium manually." && exit 1; \
   fi
 
-RUN git clone --branch class https://github.com/holesail/holesail.git .
+RUN git clone https://github.com/holesail/holesail.git .
 
 # Install dependencies
 RUN npm install --omit=dev
